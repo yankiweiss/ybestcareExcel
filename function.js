@@ -3,6 +3,8 @@
 // below is Selecting the userOutput and displays dynamically the text that's appropriate for that Stage
 // and passing in two params as the actual text and cssColor that are associate and a timeout of 2 Seconds
 // and then disappearing.
+
+
 function textDisappear(value, cssTxtColor) {
   let communicateWithUser = document.getElementById("userOutput");
   communicateWithUser.style.display = "block";
@@ -80,10 +82,10 @@ function uploadFiles(event, fileId) {
                   rowData[header] =
                     jsDate instanceof Date && !isNaN(jsDate)
                       ? (jsDate.getMonth() + 1).toString().padStart(2, "0") +
-                        "/" +
-                        jsDate.getDate().toString().padStart(2, "0") +
-                        "/" +
-                        jsDate.getFullYear()
+                      "/" +
+                      jsDate.getDate().toString().padStart(2, "0") +
+                      "/" +
+                      jsDate.getFullYear()
                       : cellValue;
                 } else if (typeof cellValue === "number") {
                   rowData[header] = excelDateToJSDate(cellValue);
@@ -163,10 +165,10 @@ function uploadFiles(event, fileId) {
                   rowData[header] =
                     jsDate instanceof Date && !isNaN(jsDate)
                       ? (jsDate.getMonth() + 1).toString().padStart(2, "0") +
-                        "/" +
-                        jsDate.getDate().toString().padStart(2, "0") +
-                        "/" +
-                        jsDate.getFullYear()
+                      "/" +
+                      jsDate.getDate().toString().padStart(2, "0") +
+                      "/" +
+                      jsDate.getFullYear()
                       : cellValue;
                 } else if (typeof cellValue === "number") {
                   rowData[header] = excelDateToJSDate(cellValue);
@@ -222,94 +224,83 @@ function formatDate(inputDate) {
   return `${month}/${day}/${year}`;
 }
 
-let findInTable1 = [];
+
 
 function updatePaidColumnRoster(table1data, table2data) {
-  for (const row1 of table1data) {
-    for (const row2 of table2data) {
-      if (
-        row2.Name.toString().toLowerCase().trim() ===
-          row1.Name.toString().toLowerCase().trim() &&
-        row2["Date of Service"] === row1["Date of Service"]
-      ) {
-        const exists = findInTable1.some(
-          (existingRow) =>
-            existingRow.Name.toLowerCase().trim() ===
-              row2.Name.toLowerCase().trim() &&
-            existingRow["Date of Service"] === row2["Date of Service"]
-        );
-        if (!exists) {
-          const newRow = { ...row2, Paid: row1.Paid };
 
-          findInTable1.push(newRow);
-          console.table(findInTable1);
-        }
-      }
+  const dateOfReport = document.getElementById('dateOfReport');
+
+const dateOfReportDate = dateOfReport.value;
+
+
+  let matchTracker1 = {}; // Object to track occurrences of (Name, Date of Service)
+
+  for (const row1 of table1data) {
+    let key = `${row1.Name?.toLowerCase().trim()}|${row1['Date of Service']}`;
+    
+
+    if (matchTracker1[key] === undefined) {
+      matchTracker1[key] = 0; // Start index at 1
+    } else {
+      matchTracker1[key]++; // Increment index for next occurrence
     }
 
-    displayTable(findInTable1);
+    row1.index = matchTracker1[key]; // Assign index to the row
   }
+
+  let matchTracker2 = {};
+
+  for (const row2 of table2data) {
+    let key = `${row2.Name?.toLowerCase().trim()}|${row2['Date of Service']}`;
+
+    if (matchTracker2[key] === undefined) {
+      matchTracker2[key] = 0; // Start index at 1
+    } else {
+      matchTracker2[key]++; // Increment index for next occurrence
+    }
+
+    row2.index = matchTracker2[key]; // Assign index to the row
+  }
+
+  let newRows = [];
+  for (const row1 of table1data) {
+    let foundMatch = false;
+    for (const row2 of table2data) {
+      if (row1.Name?.toLowerCase().trim() === row2.Name?.toLowerCase().trim() && row1['Date of Service'] === row2['Date of Service'] && row1.index === row2.index) {
+        row2.Paid = row1.Paid;
+        foundMatch = true;
+      }
+    }
+    if (!foundMatch) {
+      newRows.push(row1)
+    }
+  }
+
+  table2data.push(...newRows)
+  displayMatchingTable(table2data)
+
+  console.log('table1data ', table1data);
+  console.log('table2data', table2data)
 }
 
-let currentPage = 0;
 
-let tablePages = {};
+
+
+
+
+
+
 
 // creates a table based on which tableButton was pressed
-function createTable(tableId, data) {
-  if (!tablePages[tableId]) {
-    tablePages[tableId] = 0;
-  }
 
-  let currentPage = tablePages[tableId];
+/*let existingBtn = document.getElementById('showNextPageBilling');
+ 
+  existingBtn.style.visibility = 'visible';
+    table.appendChild(existingBtn); // Append to the parent of the table (outside the table itself)
+    */
 
-  let table = document.getElementById(tableId);
-  table.innerHTML = "";
 
-  if (currentPage === 0) {
-    table.innerHTML = "";
-  }
-  let tableHeader = table.querySelector("thead");
-
-  if (!tableHeader) {
-    tableHeader = document.createElement("thead");
-    let headerRow = document.createElement("tr");
-
-    const headers = Object.keys(data[0]);
-    headers.forEach((header) => {
-      const th = document.createElement("th");
-      th.textContent = header;
-      headerRow.appendChild(th);
-    });
-    tableHeader.appendChild(headerRow);
-    table.appendChild(tableHeader);
-  }
-
-  let tablebody = table.querySelector("tbody");
-  if (!tablebody) {
-    tablebody = document.createElement("tbody");
-    table.appendChild(tablebody);
-  }
-
-  data.forEach((row) => {
-    let tr = document.createElement("tr");
-    Object.keys(data[0]).forEach((header) => {
-      let td = document.createElement("td");
-      td.textContent = row[header];
-      tr.appendChild(td);
-    });
-    tablebody.appendChild(tr);
-  });
-
-  tablePages[tableId]++;
-
-  /*let existingBtn = document.getElementById('showNextPageBilling');
-  
-    existingBtn.style.visibility = 'visible';
-      table.appendChild(existingBtn); // Append to the parent of the table (outside the table itself)
-      */
-}
-
+// need to work on this
 // user can input and search in both tables for that value
 async function searchNames(event) {
   if (table1data.length < 1 || table2data.length < 1) {
@@ -385,32 +376,34 @@ function exportToCSV(data) {
 
 // Example usage: export table2data when clicking a button
 
-function displayTable(data) {
-  const tableHeaders = document.getElementById("tableHeaders");
+function displayMatchingTable(data) {
 
-  const tableBody = document.querySelector("#dataTable tbody");
+  let table = document.getElementById('table');
+  let thead = document.createElement('thead');
+  let tr = document.createElement('tr');
+  let tbody = document.createElement('tbody');
 
-  tableHeaders.innerHTML = "";
-  tableBody.innerHTML = "";
+  const headers = ['Name', 'Date of Service', 'Paid']
 
-  if (data.length === 0) return;
+  for (const header of headers) {
+    let th = document.createElement('th');
+    th.textContent = header;
+    tr.appendChild(th);
+    thead.appendChild(tr);
+    table.appendChild(tr)
+  }
 
-  const columns = Object.keys(data[0]);
+  for (const row of data) {
+    let tr = document.createElement('tr');
 
-  columns.forEach((column) => {
-    const th = document.createElement("th");
-    th.textContent = column;
-    tableHeaders.appendChild(th);
-  });
+    for (const header of headers) {
+      let td = document.createElement('td');
+      td.textContent = row[header]
+      tr.appendChild(td)
+    }
+    tbody.appendChild(tr)
+  }
 
-  data.forEach((row) => {
-    const tr = document.createElement("tr");
-    columns.forEach((column) => {
-      const td = document.createElement("td");
-      td.textContent = row[column];
-      tr.appendChild(td);
-    });
+  table.appendChild(tbody)
 
-    tableBody.appendChild(tr);
-  });
 }
