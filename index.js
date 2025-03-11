@@ -1,16 +1,28 @@
-//  Objects - key/value pairs
+let x;
 
-let d ;
+const person ={
+    name: 'Jacob Weiss',
+    age: 28,
+    isAdmin: true,
+    address: {
+        street: '18 Pulaski St',
+        city: 'Brooklyn',
+        state: 'NY'
+    },
+    hobbies: ['Music', 'Watching']
+}
 
-d = new Date();
+x = person.name;
+x = person['age']
+x = person.address.city;
+x = person.hobbies;
 
-d = 
+person.name = 'John Doe'
+person.isAdmin = false
 
+//delete person.age;
 
-
-console.log(d)
-
-// Need to add Insurance Column from table1data to table2data
+console.log(person)
 
 
 
