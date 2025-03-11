@@ -279,8 +279,7 @@ const dateOfReportDate = dateOfReport.value;
   table2data.push(...newRows)
   displayMatchingTable(table2data)
 
-  console.log('table1data ', table1data);
-  console.log('table2data', table2data)
+  
 }
 
 
