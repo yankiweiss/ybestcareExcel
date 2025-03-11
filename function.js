@@ -230,14 +230,18 @@ function updatePaidColumnRoster(table1data, table2data) {
 
   const dateOfReport = document.getElementById('dateOfReport');
 
-const dateOfReportDate = dateOfReport.value;
+  const dateOfReportDate = dateOfReport.value;
+
+  const dateSplit = dateOfReportDate.split('-')
+
+  const convertedDate = `${dateSplit[2]}/${dateSplit[1]}/${dateSplit[0]}`;
 
 
   let matchTracker1 = {}; // Object to track occurrences of (Name, Date of Service)
 
   for (const row1 of table1data) {
     let key = `${row1.Name?.toLowerCase().trim()}|${row1['Date of Service']}`;
-    
+
 
     if (matchTracker1[key] === undefined) {
       matchTracker1[key] = 0; // Start index at 1
@@ -267,19 +271,23 @@ const dateOfReportDate = dateOfReport.value;
     let foundMatch = false;
     for (const row2 of table2data) {
       if (row1.Name?.toLowerCase().trim() === row2.Name?.toLowerCase().trim() && row1['Date of Service'] === row2['Date of Service'] && row1.index === row2.index) {
-        row2.Paid = row1.Paid;
+        row2[`Paid - ${convertedDate}`] = row1.Paid;
+        row2['Insurance(s)'] = row1['Insurance(s)']
         foundMatch = true;
       }
     }
     if (!foundMatch) {
-      newRows.push(row1)
+      newRows.push({
+        ...row1,
+        [`Paid - ${convertedDate}`]: row1.Paid
+      })
     }
   }
 
   table2data.push(...newRows)
   displayMatchingTable(table2data)
 
-  
+
 }
 
 
@@ -382,7 +390,7 @@ function displayMatchingTable(data) {
   let tr = document.createElement('tr');
   let tbody = document.createElement('tbody');
 
-  const headers = ['Name', 'Date of Service', 'Paid']
+  const headers = ['Name', 'Date of Service', 'Paid / Date of Service']
 
   for (const header of headers) {
     let th = document.createElement('th');

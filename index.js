@@ -1,15 +1,16 @@
 //  Objects - key/value pairs
 
-let x;
-const person = {
-    name: 'Jacob Weiss',
-    Phone: '9178317025',
-    address: '18 Pulaski'
-}
+let d ;
 
-x = person.mobile;
+d = new Date();
 
-console.log(x)
+d = 
+
+
+
+console.log(d)
+
+// Need to add Insurance Column from table1data to table2data
 
 
 
