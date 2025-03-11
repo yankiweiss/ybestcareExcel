@@ -231,6 +231,7 @@ function updatePaidColumnRoster(table1data, table2data) {
   const dateOfReport = document.getElementById('dateOfReport');
 
   const dateOfReportDate = dateOfReport.value;
+ 
 
   const dateSplit = dateOfReportDate.split('-')
 
@@ -285,7 +286,7 @@ function updatePaidColumnRoster(table1data, table2data) {
   }
 
   table2data.push(...newRows)
-  displayMatchingTable(table2data)
+  //displayMatchingTable(table2data)
 
 
 }
@@ -353,6 +354,16 @@ function excelDateToJSDate(serial) {
 // Function Save updated Table2data to Excel File.
 
 function exportToCSV(data) {
+
+  const dateOfReport = document.getElementById('dateOfReport');
+
+  // Check if the date is set
+  if (!dateOfReport || !dateOfReport.value) {
+    alert("Please set the report date before exporting the file.");
+    return;
+  }
+
+  
   if (data.length === 0) {
     textDisappear("No data available to export!", "red");
     return;
