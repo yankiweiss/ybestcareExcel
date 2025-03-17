@@ -228,18 +228,21 @@ function formatDate(inputDate) {
 
 function updatePaidColumnRoster(table1data, table2data) {
 
+  // below is taking the date picker and putting in right format.
+
   const dateOfReport = document.getElementById('dateOfReport');
 
   const dateOfReportDate = dateOfReport.value;
 
-  console.log(dateOfReportDate)
- 
+
 
   const dateSplit = dateOfReportDate.split('-')
 
   const convertedDate = `${dateSplit[1]}/${dateSplit[2]}/${dateSplit[0]}`;
 
-  const paidColumnName = `Paid - ${convertedDate}`;
+  const paidColumnName = convertedDate;
+
+  
 
 
   let matchTracker1 = {}; // Object to track occurrences of (Name, Date of Service)
@@ -270,25 +273,28 @@ function updatePaidColumnRoster(table1data, table2data) {
 
     row2.index = matchTracker2[key]; // Assign index to the row
 
-    if (!(paidColumnName in row2)) {
-      row2[paidColumnName] = '';
+    
   }
-}
 
   let newRows = [];
   for (const row1 of table1data) {
     let foundMatch = false;
     for (const row2 of table2data) {
       if (row1.Name?.toLowerCase().trim() === row2.Name?.toLowerCase().trim() && row1['Date of Service'] === row2['Date of Service'] && row1.index === row2.index) {
-        row2[paidColumnName] = row1.Paid;
+        row2['Paid']= row1['Paid'];
         row2['Insurance(s)'] = row1['Insurance(s)']
+
+        if(!row2['Date of Report']){
+        row2['Date of Report'] = paidColumnName;
+        }
         foundMatch = true;
       }
     }
     if (!foundMatch) {
       newRows.push({
         ...row1,
-        [paidColumnName]: row1.Paid
+        ['Paid']: row1.Paid,
+        ['Date of Report']: paidColumnName
       })
     }
   }
@@ -296,7 +302,6 @@ function updatePaidColumnRoster(table1data, table2data) {
   table2data.push(...newRows)
 
   for (const row of table2data) {
-    delete row.Paid;
     delete row.index;
   }
 }
@@ -373,7 +378,7 @@ function exportToCSV(data) {
     return;
   }
 
-  
+
   if (data.length === 0) {
     textDisappear("No data available to export!", "red");
     return;
