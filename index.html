@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
 </head>
 <style>
     table, td, tr, th{
@@ -14,6 +16,9 @@
     }
 </style>
 <body>
+
+
+    <input type="file" id="excel">
 
     <!-- Still need to add date of Report, should be added as Paid Header or at next column,
      
@@ -27,14 +32,16 @@
 <div class="d-flex justify-content-center">
         <div class="m-3">
             <label for="billingFile" class="form-label">Please upload Billing File:</label>
-            <input class="form-control" type="file" id="billingFile" accept=".xlsx, .csv" onchange="uploadFiles(event, 'billingFile')"/>
+            <input class="form-control" type="file" id="billing" accept=".xlsx, .csv" onchange="uploadFiles(event, 'billing')"/>
     </div>
 
     <div class="m-3">
         <label for="rosterFile" class="form-label">Please Upload Roster File:</label>
-        <input class="form-control" type="file" id="rosterFile" accept=".xlsx, .csv" onchange="uploadFiles(event, 'rosterFile')"/>
+        <input class="form-control" type="file" id="roster" accept=".xlsx, .csv" onchange="uploadFiles(event, 'roster')"/>
 </div>
 </div>
+
+<button id="load">Load Files</button>
 
 
     <p style="font-size: 30px; height: 100px; text-align: center; text-shadow: 2px 3px #d3c9c9" id="userOutput"></p>
@@ -54,7 +61,7 @@
 
 
 <div>
-    <button id="saveToExcel" class="btn btn-outline-primary p-2 mx-5" onclick="exportToCSV(table2data)">Save Updated Roster To Excel File</button>
+    <button id="saveToExcel" class="btn btn-outline-primary p-2 mx-5" >Save Updated Roster To Excel File</button>
   
 </div>
     </div>
@@ -69,9 +76,45 @@
 
     <table id="table"></table>
 
+
+    <div class="accordion" id="accordionExample" style="width: 850px; margin: auto;">
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingOne">
+      <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+        Billing File Format:
+      </button>
+    </h2>
+    <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
+      <div class="accordion-body">
+        <table class="table">
+            <tr scope="row">
+                <td>Date Of Report</td><td>Patient Name</td><td>Date Of Service</td><td>Insurance</td><td>Ref#</td><td>Amount Billed</td>
+            </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingTwo">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+        Roster Format:
+      </button>
+    </h2>
+    <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
+      <div class="accordion-body">
+        <table class="table">
+            <tr scope="row">
+                <td>Date Of Report</td><td>Patient Name</td><td>Date Of Service</td><td>Insurance</td><td>Ref#</td><td>Amount Billed</td>
+            </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+  
+
     
     
-    <script src="index.js"></script>
+   
     
     <script src="function.js"></script>
     
