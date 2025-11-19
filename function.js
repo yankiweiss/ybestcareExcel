@@ -7,6 +7,8 @@ let rosterData = null;
 function processData(billingData, rosterData) {
   const duplicatesInBillingData = duplicatesInBilling(billingData);
 
+  console.log(duplicatesInBillingData)
+
   const { duplicateBillingFromRoster } = duplicatesRosterToBilling(
     billingData,
     rosterData
@@ -92,7 +94,7 @@ function duplicatesInBilling(billingData) {
 
   for (const billingItem in billingDuplicates) {
     if (billingDuplicates[billingItem].length > 1) {
-      dup.push(billingItem);
+      dup.push(...billingDuplicates[billingItem]);
     }
   }
   return dup;
