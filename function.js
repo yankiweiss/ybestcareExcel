@@ -4,30 +4,6 @@ const userOutput = document.getElementById("userOutput");
 let billingData = null;
 let rosterData = null;
 
-function processData(billingData, rosterData) {
-  const duplicatesInBillingData = duplicatesInBilling(billingData);
-
-  console.log(duplicatesInBillingData)
-
-  const { duplicateBillingFromRoster } = duplicatesRosterToBilling(
-    billingData,
-    rosterData
-  );
-
-  const duplicates = [
-    ...duplicatesInBillingData,
-    ...duplicateBillingFromRoster,
-  ];
-
-  const { billingNotInRoster } = duplicatesRosterToBilling(
-    billingData,
-    rosterData
-  );
-
-  const newRoster = [...rosterData, ...billingNotInRoster];
-
-  createNewWorkbook(duplicates, newRoster);
-}
 
 function uploadFiles(event, inputID) {
   const file = document.getElementById(inputID).files[0];
@@ -44,19 +20,21 @@ function uploadFiles(event, inputID) {
 
     const raw_data = XLSX.utils.sheet_to_json(worksheet);
 
-    const cleanedData = normalizeHeaders(raw_data);
+    const cleanedData = normalizeData(raw_data);
 
     if (inputID === "billing") {
       billingData = cleanedData;
+     
 
-      billDup = duplicatesInBilling(billingData);
+      
     } else if (inputID === "roster") {
       rosterData = cleanedData;
+     
     }
 
     if (billingData && rosterData) {
       userOutput.innerHTML =
-        "both files are Uploaded<br>you can now download new file";
+        "both files are Uploaded<br>software is downloading your new file now";
       processData(billingData, rosterData);
     }
 
@@ -66,9 +44,69 @@ function uploadFiles(event, inputID) {
   reader.readAsArrayBuffer(file);
 }
 
-function normalizeHeaders(raw_data) {
+function processData(billingData, rosterData) {
+ 
+  const duplicatesInBillingData = duplicatesInBilling(billingData);
+  
+
+  const { duplicateBillingFromRoster } = duplicatesRosterToBilling(
+    billingData,
+    rosterData
+  );
+
+  
+  const duplicates = [
+    ...duplicatesInBillingData,
+    ...duplicateBillingFromRoster,
+  ];
+
+  const { billingNotInRoster } = duplicatesRosterToBilling(
+    billingData,
+    rosterData
+  );
+
+  const newRoster = [...rosterData, ...billingNotInRoster];
+
+  createNewWorkbook(duplicates, newRoster);
+}
+
+
+
+
+
+function normalizeDate(value) {
+  if (typeof value === "number") {
+    const d = XLSX.SSF.parse_date_code(value);
+    return `${String(d.m).padStart(2, "0")}/${String(d.d).padStart(2, "0")}/${d.y
+      }`;
+  }
+
+  if (typeof value === "string") {
+    const cleaned = value.trim();
+
+    const mdy = cleaned.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
+
+    if (mdy) {
+
+      let [, m, d, y] = mdy;
+
+      if (y.length === 2) {
+        y = Number(y) > 30 ? '19' + y : '20' + y;
+      }
+      return `${m.padStart(2, "0")}/${d.padStart(2, "0")}/${y
+        }`;
+    }
+    return cleaned;
+  }
+  return value;
+}
+
+// QUIZ how to take all the values of both arrays and normalize the object VALUES
+function normalizeData(raw_data) {
   return raw_data.map((row) => {
     const cleaned = {};
+
+    // need to normalize the values as well
     Object.keys(row).forEach((key) => {
       const newKey = key
         .trim()
@@ -76,8 +114,28 @@ function normalizeHeaders(raw_data) {
         .replace(/[^\w]/g, "")
         .toLowerCase();
 
-      cleaned[newKey] = row[key];
-    });
+        if(typeof row[key] === 'string'){
+
+          cleaned[newKey] = row[key].toLocaleLowerCase().trim()
+}else {
+cleaned[newKey] = row[key]
+}
+
+      
+
+      if(key.toLocaleLowerCase().includes('date')){
+        
+
+        cleaned[newKey] = normalizeDate(row[key])
+      }
+
+      
+
+//     if(key === 'patient_name'){
+//console.log(row[key])
+//     }
+
+       });
     return cleaned;
   });
 }
@@ -87,7 +145,7 @@ function normalizeHeaders(raw_data) {
 function duplicatesInBilling(billingData) {
   const billingDuplicates = Object.groupBy(
     billingData,
-    ({ date_of_service, patient_name }) => `${date_of_service}-${patient_name}`
+    ({ date_of_service, patient_name, date_of_birth }) => `${date_of_service}-${patient_name}-${date_of_birth}`
   );
 
   const dup = [];
@@ -107,17 +165,21 @@ function duplicatesRosterToBilling(billingData, rosterData) {
 
   // 1️⃣ Build a fast lookup for roster: "name|date"
   for (const row of rosterData) {
-    rosterSet.add(`${row.patient_name}|${row.date_of_service}`);
+    rosterSet.add(`${row.patient_name}|${row.date_of_service}|${row.date_of_birth}`);
   }
 
   // 2️⃣ Loop billing rows once and check against the set
   for (const row of billingData) {
-    const key = `${row.patient_name}|${row.date_of_service}`;
+    const key = `${row.patient_name}|${row.date_of_service}|${row.date_of_birth}`;
+
+    const currentDate = new Date();
 
     if (rosterSet.has(key)) {
-      duplicateBillingFromRoster.push(row); // duplicate found
+      const newColum = ({...row, notes: 'patient already in Roster'})
+      duplicateBillingFromRoster.push(newColum); // duplicate found
     } else {
-      billingNotInRoster.push(row); // unique row
+      const newColum = ({...row, notes : ` added ${currentDate.toLocaleDateString()}`})
+      billingNotInRoster.push(newColum); // unique row
     }
   }
   return { billingNotInRoster, duplicateBillingFromRoster };
@@ -141,3 +203,5 @@ function createNewWorkbook(duplicates, newRoster) {
 
   XLSX.writeFile(workbook, `${Date.now()}_combined.xlsx`);
 }
+
+
