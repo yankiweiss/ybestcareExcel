@@ -1,11 +1,11 @@
-const exportExcel = document.getElementById("saveToExcel");
+
 const userOutput = document.getElementById("userOutput");
 
 let billingData = null;
 let rosterData = null;
 
 
-function uploadFiles(event, inputID) {
+function uploadFiles(inputID) {
   const file = document.getElementById(inputID).files[0];
   const reader = new FileReader();
 
@@ -29,6 +29,7 @@ function uploadFiles(event, inputID) {
       
     } else if (inputID === "roster") {
       rosterData = cleanedData;
+    
      
     }
 
@@ -46,28 +47,47 @@ function uploadFiles(event, inputID) {
 
 function processData(billingData, rosterData) {
  
-  const duplicatesInBillingData = duplicatesInBilling(billingData);
-  
+  //const duplicatesInBillingData = duplicatesInBilling(billingData);
+  const dup = duplicatesInBilling(billingData)
 
-  const { duplicateBillingFromRoster } = duplicatesRosterToBilling(
+  const { alreadyBilled } = checkIfAlreadyBilled(
     billingData,
     rosterData
   );
 
-  
-  const duplicates = [
-    ...duplicatesInBillingData,
-    ...duplicateBillingFromRoster,
-  ];
+  const {inRoster, notInRoster} = inBillingNotInRoster(
+    billingData, rosterData
+  )
 
-  const { billingNotInRoster } = duplicatesRosterToBilling(
+  const {notBilled } = checkIfAlreadyBilled(
     billingData,
     rosterData
-  );
+  )
 
-  const newRoster = [...rosterData, ...billingNotInRoster];
+  console.log(inRoster, notInRoster)
 
-  createNewWorkbook(duplicates, newRoster);
+  
+//  const duplicates = [
+//    ...duplicatesInBillingData,
+//    ...duplicateBillingFromRoster,
+//  ];
+//
+//  const { billingNotInRoster } = duplicatesRosterToBilling(
+//    billingData,
+//    rosterData
+//  );
+
+  //const newRoster = [...rosterData, ...billingNotInRoster];
+
+  const rosterResult = [...alreadyBilled, ...notBilled];
+
+  console.log(dup)
+
+  
+
+ 
+
+  createNewWorkbook(rosterResult);
 }
 
 
@@ -114,28 +134,20 @@ function normalizeData(raw_data) {
         .replace(/[^\w]/g, "")
         .toLowerCase();
 
-        if(typeof row[key] === 'string'){
-
-          cleaned[newKey] = row[key].toLocaleLowerCase().trim()
-}else {
-cleaned[newKey] = row[key]
-}
-
-      
-
-      if(key.toLocaleLowerCase().includes('date')){
-        
-
-        cleaned[newKey] = normalizeDate(row[key])
+      if (typeof row[key] === "string") {
+        cleaned[newKey] = row[key].toLocaleLowerCase().trim();
+      } else {
+        cleaned[newKey] = row[key];
       }
 
-      
+      if (key.toLocaleLowerCase().includes("date")) {
+        cleaned[newKey] = normalizeDate(row[key]);
+      }
 
-//     if(key === 'patient_name'){
-//console.log(row[key])
-//     }
-
-       });
+      //     if(key === 'patient_name'){
+      //console.log(row[key])
+      //     }
+    });
     return cleaned;
   });
 }
@@ -145,63 +157,92 @@ cleaned[newKey] = row[key]
 function duplicatesInBilling(billingData) {
   const billingDuplicates = Object.groupBy(
     billingData,
-    ({ date_of_service, patient_name, date_of_birth }) => `${date_of_service}-${patient_name}-${date_of_birth}`
+    ({date_of_service, patient_name, date_of_birth}) => `${date_of_service}-${patient_name}-${date_of_birth}`
   );
+
+  
 
   const dup = [];
 
   for (const billingItem in billingDuplicates) {
     if (billingDuplicates[billingItem].length > 1) {
-      dup.push(...billingDuplicates[billingItem]);
+      dup.push(billingDuplicates[billingItem]);
     }
   }
   return dup;
 }
 
-function duplicatesRosterToBilling(billingData, rosterData) {
-  const rosterSet = new Set();
-  const billingNotInRoster = [];
-  const duplicateBillingFromRoster = [];
+const currentDate = new Date();
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth() + 1;
+      const day = currentDate.getDate();
 
-  // 1️⃣ Build a fast lookup for roster: "name|date"
-  for (const row of rosterData) {
-    rosterSet.add(`${row.patient_name}|${row.date_of_service}|${row.date_of_birth}`);
+function checkIfAlreadyBilled(billingData, rosterData) {
+  const billingSet = new Set();
+  const alreadyBilled = [];
+  const notBilled = [];
+
+  for (const row of billingData){
+    billingSet.add(`${row.patient_name}|${row.date_of_service}|${row.date_of_birth}`)
+  
   }
+  for (const row of rosterData){
+    const key = `${row.patient_name}|${row.date_of_service}|${row.date_of_birth}`
+  
+      
 
-  // 2️⃣ Loop billing rows once and check against the set
-  for (const row of billingData) {
-    const key = `${row.patient_name}|${row.date_of_service}|${row.date_of_birth}`;
-
-    const currentDate = new Date();
-
-    if (rosterSet.has(key)) {
-      const newColum = ({...row, notes: 'patient already in Roster'})
-      duplicateBillingFromRoster.push(newColum); // duplicate found
-    } else {
-      const newColum = ({...row, notes : ` added ${currentDate.toLocaleDateString()}`})
-      billingNotInRoster.push(newColum); // unique row
+    if (billingSet.has(key)) {
+      const newColum = ({...row, paid: `yes - ${month}/${day}/${year}`})
+      alreadyBilled.push(newColum); // duplicate found
+    }else {
+      notBilled.push(row)
     }
   }
-  return { billingNotInRoster, duplicateBillingFromRoster };
+  return { alreadyBilled, notBilled};
 }
+
+
+// would like to have a function that when their is one in billing and not in roster.
+
+function inBillingNotInRoster (){
+  const notInRoster = [];
+  const inRoster = [];
+  const rosterSet = new Set();
+
+  for (const row of rosterData){
+    rosterSet.add(`${row.patient_name}|${row.date_of_service}|${row.date_of_birth}`)
+  }
+
+  for (const row of billingData){
+    key = `${row.patient_name}|${row.date_of_service}|${row.date_of_birth}`;
+
+    if(rosterSet.has(key)){
+inRoster.push(row)
+    }else {
+      notInRoster.push(key)
+    }
+  }
+  return ({inRoster, notInRoster})
+}
+
 // after uploading the roster checks if their is duplicates in billing and roster;
 
 // declaring both table1data, table2data empty arrays and pushing in later both table data's.
 
 // need to see where to get the duplicates in billing
 
-function createNewWorkbook(duplicates, newRoster) {
+function createNewWorkbook(rosterResult) {
   const workbook = XLSX.utils.book_new();
 
-  const sheet1 = XLSX.utils.json_to_sheet(newRoster);
+  const sheet1 = XLSX.utils.json_to_sheet(rosterResult);
 
-  XLSX.utils.book_append_sheet(workbook, sheet1, "Roster");
+  XLSX.utils.book_append_sheet(workbook, sheet1, "Updated Roster");
 
-  const sheet2 = XLSX.utils.json_to_sheet(duplicates);
 
-  XLSX.utils.book_append_sheet(workbook, sheet2, "duplicates");
 
-  XLSX.writeFile(workbook, `${Date.now()}_combined.xlsx`);
+  XLSX.writeFile(workbook, `${month}/${day}/${year}_combined.xlsx`);
 }
+
+
 
 
