@@ -48,44 +48,21 @@ function uploadFiles(inputID) {
 function processData(billingData, rosterData) {
  
   //const duplicatesInBillingData = duplicatesInBilling(billingData);
-  const dup = duplicatesInBilling(billingData)
+  
 
-  const { alreadyBilled } = checkIfAlreadyBilled(
+  const { alreadyBilled, notBilled } = checkIfAlreadyBilled(
     billingData,
     rosterData
   );
 
-  const {inRoster, notInRoster} = inBillingNotInRoster(
-    billingData, rosterData
-  )
-
-  const {notBilled } = checkIfAlreadyBilled(
-    billingData,
-    rosterData
-  )
-
-  console.log(inRoster, notInRoster)
+  //const {inRoster, notInRoster} = inBillingNotInRoster(
+  //  billingData, rosterData
+  //)
 
   
-//  const duplicates = [
-//    ...duplicatesInBillingData,
-//    ...duplicateBillingFromRoster,
-//  ];
-//
-//  const { billingNotInRoster } = duplicatesRosterToBilling(
-//    billingData,
-//    rosterData
-//  );
-
-  //const newRoster = [...rosterData, ...billingNotInRoster];
 
   const rosterResult = [...alreadyBilled, ...notBilled];
 
-  console.log(dup)
-
-  
-
- 
 
   createNewWorkbook(rosterResult);
 }
@@ -154,23 +131,23 @@ function normalizeData(raw_data) {
 
 // below function checks if their is any duplicates in billing file
 
-function duplicatesInBilling(billingData) {
-  const billingDuplicates = Object.groupBy(
-    billingData,
-    ({date_of_service, patient_name, date_of_birth}) => `${date_of_service}-${patient_name}-${date_of_birth}`
-  );
-
-  
-
-  const dup = [];
-
-  for (const billingItem in billingDuplicates) {
-    if (billingDuplicates[billingItem].length > 1) {
-      dup.push(billingDuplicates[billingItem]);
-    }
-  }
-  return dup;
-}
+//function duplicatesInBilling(billingData) {
+//  const billingDuplicates = Object.groupBy(
+//    billingData,
+//    ({date_of_service, patient_name, date_of_birth}) => `${date_of_service}-${patient_name}-${date_of_birth}`
+//  );
+//
+//  
+//
+//  const dup = [];
+//
+//  for (const billingItem in billingDuplicates) {
+//    if (billingDuplicates[billingItem].length > 1) {
+//      dup.push(billingDuplicates[billingItem]);
+//    }
+//  }
+//  return dup;
+//}
 
 const currentDate = new Date();
       const year = currentDate.getFullYear();
@@ -204,26 +181,26 @@ function checkIfAlreadyBilled(billingData, rosterData) {
 
 // would like to have a function that when their is one in billing and not in roster.
 
-function inBillingNotInRoster (){
-  const notInRoster = [];
-  const inRoster = [];
-  const rosterSet = new Set();
-
-  for (const row of rosterData){
-    rosterSet.add(`${row.patient_name}|${row.date_of_service}|${row.date_of_birth}`)
-  }
-
-  for (const row of billingData){
-    key = `${row.patient_name}|${row.date_of_service}|${row.date_of_birth}`;
-
-    if(rosterSet.has(key)){
-inRoster.push(row)
-    }else {
-      notInRoster.push(key)
-    }
-  }
-  return ({inRoster, notInRoster})
-}
+//function inBillingNotInRoster (){
+//  const notInRoster = [];
+//  const inRoster = [];
+//  const rosterSet = new Set();
+//
+//  for (const row of rosterData){
+//    rosterSet.add(`${row.patient_name}|${row.date_of_service}|${row.date_of_birth}`)
+//  }
+//
+//  for (const row of billingData){
+//    key = `${row.patient_name}|${row.date_of_service}|${row.date_of_birth}`;
+//
+//    if(rosterSet.has(key)){
+//inRoster.push(row)
+//    }else {
+//      notInRoster.push(key)
+//    }
+//  }
+//  return ({inRoster, notInRoster})
+//}
 
 // after uploading the roster checks if their is duplicates in billing and roster;
 
